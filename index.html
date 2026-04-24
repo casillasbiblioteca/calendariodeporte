@@ -31,15 +31,20 @@
         input, select { width: 100%; padding: 12px 14px; border-radius: 28px; border: 1px solid #cbd5e1; font-size: 1rem; }
         button.btn-primary { background: #1e5631; color: white; border: none; padding: 12px; width: 100%; border-radius: 40px; font-weight: bold; cursor: pointer; margin-top: 8px; }
         button.btn-secondary { background: #efefef; color: #1e2a3e; border: 1px solid #ccc; padding: 10px; border-radius: 40px; width: 100%; margin-top: 12px; cursor: pointer; }
+        button.btn-danger { background: #dc2626; color: white; border: none; padding: 6px 12px; border-radius: 40px; cursor: pointer; font-size: 0.75rem; margin-top: 5px; width: auto; display: inline-block; }
+        button.btn-danger:hover { background: #b91c1c; }
         .info-seleccion { background: #eef2ff; padding: 12px; border-radius: 24px; margin-bottom: 20px; text-align: center; }
-        .day-occupancy { background: #fff9e8; border-radius: 24px; padding: 12px; margin-bottom: 20px; border-left: 5px solid #f97316; max-height: 280px; overflow-y: auto; }
-        .occupancy-item { background: white; border-radius: 20px; padding: 8px 10px; margin-bottom: 8px; border: 1px solid #ffe6c7; }
+        .day-occupancy { background: #fff9e8; border-radius: 24px; padding: 12px; margin-bottom: 20px; border-left: 5px solid #f97316; max-height: 320px; overflow-y: auto; }
+        .occupancy-item { background: white; border-radius: 20px; padding: 10px; margin-bottom: 8px; border: 1px solid #ffe6c7; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+        .occupancy-info { flex: 1; }
         .occupancy-hour { font-weight: bold; color: #1e5631; display: inline-block; min-width: 55px; }
         .export-section { background: white; border-radius: 32px; padding: 20px; margin-top: 20px; }
         .export-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 18px; }
         table.data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; display: block; overflow-x: auto; }
         th { background: #1e5631; color: white; padding: 8px; }
-        td { border: 1px solid #ddd; padding: 8px; }
+        td { border: 1px solid #ddd; padding: 8px; vertical-align: middle; }
+        .delete-btn { background: #dc2626; color: white; border: none; padding: 4px 10px; border-radius: 20px; cursor: pointer; font-size: 0.7rem; }
+        .delete-btn:hover { background: #b91c1c; }
         .totales { background: #f1f8e9; padding: 12px; border-radius: 20px; margin-top: 20px; font-weight: bold; }
         button.download-btn { background: #106b3c; padding: 10px 24px; border-radius: 40px; border: none; color: white; cursor: pointer; }
         footer { text-align: center; margin-top: 40px; color: #5f6c7a; }
@@ -51,7 +56,7 @@
     <div class="hero">
         <h1><i class="fas fa-calendar-alt"></i> Reservas deportivas · Casillas de Coria</h1>
         <p>Pistas de Pádel | Gimnasio municipal · Horario 09:00 - 14:00</p>
-        <p><i class="fas fa-globe"></i> <strong>✅ ¡DATOS COMPARTIDOS EN TIEMPO REAL!</strong> Cualquier cambio se ve al instante</p>
+        <p><i class="fas fa-globe"></i> <strong>✅ ¡DATOS COMPARTIDOS EN TIEMPO REAL!</strong> Haz clic en 🗑️ para borrar reservas</p>
     </div>
 
     <div class="main-grid">
@@ -109,8 +114,8 @@
         </div>
         <div style="overflow-x:auto;">
             <table class="data-table">
-                <thead><tr><th>Fecha</th><th>Hora</th><th>Instalación</th><th>Nombre</th><th>DNI</th></tr></thead>
-                <tbody id="tableBody"><tr><td colspan="5">Cargando...</td></tr></tbody>
+                <thead><tr><th>Fecha</th><th>Hora</th><th>Instalación</th><th>Nombre</th><th>DNI</th><th>Acción</th></tr></thead>
+                <tbody id="tableBody"><tr><td colspan="6">Cargando...</td></tr></tbody>
             </table>
         </div>
         <div id="totalsPanel" class="totales"></div>
@@ -119,7 +124,7 @@
 </div>
 
 <script>
-    // ========== CONFIGURACIÓN DE FIREBASE (TUYA) ==========
+    // ========== CONFIGURACIÓN DE FIREBASE ==========
     const firebaseConfig = {
       apiKey: "AIzaSyDZY3KrJnPFYFhivDMFj-aFmFAdajQju38",
       authDomain: "reservas-37863.firebaseapp.com",
@@ -131,7 +136,6 @@
       measurementId: "G-B7MHXGHG7D"
     };
 
-    // Inicializar Firebase
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
     const reservasRef = database.ref('reservas');
@@ -162,8 +166,8 @@
         }
     }
 
-    function isConflict(date, hour, facility) {
-        return allReservations.some(r => r.dateKey === date && r.hour === hour && r.facility === facility);
+    function isConflict(date, hour, facility, excludeId = null) {
+        return allReservations.some(r => r.dateKey === date && r.hour === hour && r.facility === facility && r.id !== excludeId);
     }
 
     function getOccupancyByDate(dateKey) {
@@ -183,10 +187,34 @@
         let html = '';
         reservasDia.forEach(res => {
             let facilityIcon = res.facility === "Pista Pádel" ? "🎾" : "🏋️";
-            html += `<div class="occupancy-item"><span class="occupancy-hour">${res.hour}</span> <strong>${facilityIcon} ${res.facility}</strong><br><span style="font-size:0.75rem;">👤 ${escapeHtml(res.fullName)} ${res.dni ? `(${escapeHtml(res.dni)})` : ''}</span></div>`;
+            html += `
+                <div class="occupancy-item">
+                    <div class="occupancy-info">
+                        <span class="occupancy-hour">${res.hour}</span>
+                        <strong>${facilityIcon} ${res.facility}</strong><br>
+                        <span style="font-size:0.75rem;">👤 ${escapeHtml(res.fullName)} ${res.dni ? `(${escapeHtml(res.dni)})` : ''}</span>
+                    </div>
+                    <button class="btn-danger" onclick="borrarReserva('${res.id}')" style="font-size:0.7rem; padding:4px 12px;">
+                        <i class="fas fa-trash"></i> Borrar
+                    </button>
+                </div>
+            `;
         });
         occupancyListDiv.innerHTML = html;
         occupancyPanel.style.display = "block";
+    }
+
+    function borrarReserva(id) {
+        if(confirm("¿Estás seguro de que quieres borrar esta reserva?")) {
+            database.ref('reservas/' + id).remove()
+                .then(() => {
+                    document.getElementById("formFeedback").innerHTML = '<span style="color:#2c5e2e;">✅ Reserva borrada correctamente</span>';
+                    setTimeout(() => document.getElementById("formFeedback").innerHTML = '', 2000);
+                })
+                .catch(error => {
+                    document.getElementById("formFeedback").innerHTML = '<span style="color:#b91c1c;">❌ Error al borrar: ' + error.message + '</span>';
+                });
+        }
     }
 
     function renderCalendar() {
@@ -240,9 +268,18 @@
         reservationsMonth.sort((a,b) => a.dateKey.localeCompare(b.dateKey) || a.hour.localeCompare(b.hour));
         const tbody = document.getElementById("tableBody");
         if(reservationsMonth.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5">No hay reservas este mes</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6">No hay reservas este mes</td></tr>';
         } else {
-            tbody.innerHTML = reservationsMonth.map(res => `<tr><td>${formatDateForDisplay(res.dateKey)}</td><td>${res.hour}</td><td>${res.facility}</td><td>${escapeHtml(res.fullName)}</td><td>${escapeHtml(res.dni) || "—"}</td></tr>`).join('');
+            tbody.innerHTML = reservationsMonth.map(res => `
+                <tr>
+                    <td>${formatDateForDisplay(res.dateKey)}</td>
+                    <td>${res.hour}</td>
+                    <td>${res.facility}</td>
+                    <td>${escapeHtml(res.fullName)}</td>
+                    <td>${escapeHtml(res.dni) || "—"}</td>
+                    <td><button class="delete-btn" onclick="borrarReserva('${res.id}')"><i class="fas fa-trash"></i> Borrar</button></td>
+                </tr>
+            `).join('');
         }
         const totalReservas = reservationsMonth.length;
         const totalPadel = reservationsMonth.filter(r => r.facility === "Pista Pádel").length;
@@ -273,6 +310,9 @@
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
     }
+
+    // Hacer la función global para que onclick funcione
+    window.borrarReserva = borrarReserva;
 
     // Escuchar cambios en tiempo real
     reservasRef.on('value', (snapshot) => {
