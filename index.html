@@ -31,7 +31,7 @@
         input, select { width: 100%; padding: 12px 14px; border-radius: 28px; border: 1px solid #cbd5e1; font-size: 1rem; }
         button.btn-primary { background: #1e5631; color: white; border: none; padding: 12px; width: 100%; border-radius: 40px; font-weight: bold; cursor: pointer; margin-top: 8px; }
         button.btn-secondary { background: #efefef; color: #1e2a3e; border: 1px solid #ccc; padding: 10px; border-radius: 40px; width: 100%; margin-top: 12px; cursor: pointer; }
-        button.btn-danger { background: #dc2626; color: white; border: none; padding: 6px 12px; border-radius: 40px; cursor: pointer; font-size: 0.75rem; margin-top: 5px; width: auto; display: inline-block; }
+        button.btn-danger { background: #dc2626; color: white; border: none; padding: 6px 12px; border-radius: 40px; cursor: pointer; font-size: 0.7rem; }
         button.btn-danger:hover { background: #b91c1c; }
         .info-seleccion { background: #eef2ff; padding: 12px; border-radius: 24px; margin-bottom: 20px; text-align: center; }
         .day-occupancy { background: #fff9e8; border-radius: 24px; padding: 12px; margin-bottom: 20px; border-left: 5px solid #f97316; max-height: 320px; overflow-y: auto; }
@@ -124,7 +124,6 @@
 </div>
 
 <script>
-    // ========== CONFIGURACIÓN DE FIREBASE ==========
     const firebaseConfig = {
       apiKey: "AIzaSyDZY3KrJnPFYFhivDMFj-aFmFAdajQju38",
       authDomain: "reservas-37863.firebaseapp.com",
@@ -174,6 +173,19 @@
         return allReservations.filter(r => r.dateKey === dateKey).sort((a,b) => a.hour.localeCompare(b.hour));
     }
 
+    function borrarReserva(id) {
+        if(confirm("¿Estás seguro de que quieres borrar esta reserva?")) {
+            database.ref('reservas/' + id).remove()
+                .then(() => {
+                    document.getElementById("formFeedback").innerHTML = '<span style="color:#2c5e2e;">✅ Reserva borrada correctamente</span>';
+                    setTimeout(() => document.getElementById("formFeedback").innerHTML = '', 2000);
+                })
+                .catch(error => {
+                    document.getElementById("formFeedback").innerHTML = '<span style="color:#b91c1c;">❌ Error al borrar</span>';
+                });
+        }
+    }
+
     function displayOccupancyForDate(dateKey) {
         const occupancyPanel = document.getElementById("occupancyPanel");
         const occupancyListDiv = document.getElementById("occupancyList");
@@ -194,27 +206,12 @@
                         <strong>${facilityIcon} ${res.facility}</strong><br>
                         <span style="font-size:0.75rem;">👤 ${escapeHtml(res.fullName)} ${res.dni ? `(${escapeHtml(res.dni)})` : ''}</span>
                     </div>
-                    <button class="btn-danger" onclick="borrarReserva('${res.id}')" style="font-size:0.7rem; padding:4px 12px;">
-                        <i class="fas fa-trash"></i> Borrar
-                    </button>
+                    <button class="btn-danger" onclick="borrarReserva('${res.id}')"><i class="fas fa-trash"></i> Borrar</button>
                 </div>
             `;
         });
         occupancyListDiv.innerHTML = html;
         occupancyPanel.style.display = "block";
-    }
-
-    function borrarReserva(id) {
-        if(confirm("¿Estás seguro de que quieres borrar esta reserva?")) {
-            database.ref('reservas/' + id).remove()
-                .then(() => {
-                    document.getElementById("formFeedback").innerHTML = '<span style="color:#2c5e2e;">✅ Reserva borrada correctamente</span>';
-                    setTimeout(() => document.getElementById("formFeedback").innerHTML = '', 2000);
-                })
-                .catch(error => {
-                    document.getElementById("formFeedback").innerHTML = '<span style="color:#b91c1c;">❌ Error al borrar: ' + error.message + '</span>';
-                });
-        }
     }
 
     function renderCalendar() {
@@ -239,8 +236,7 @@
             cell.addEventListener("click", (function(dateKeyParam) { return function() { selectDate(dateKeyParam); }; })(dateKey));
             grid.appendChild(cell);
         }
-        const totalCells = startOffset + daysInMonth;
-        const remaining = 42 - totalCells;
+        const remaining = 42 - (startOffset + daysInMonth);
         for(let i = 0; i < remaining; i++) { const empty = document.createElement("div"); empty.className = "empty-cell"; grid.appendChild(empty); }
     }
 
@@ -311,10 +307,8 @@
         URL.revokeObjectURL(url);
     }
 
-    // Hacer la función global para que onclick funcione
     window.borrarReserva = borrarReserva;
 
-    // Escuchar cambios en tiempo real
     reservasRef.on('value', (snapshot) => {
         const data = snapshot.val();
         if(data) {
@@ -329,7 +323,6 @@
         }
     });
 
-    // Guardar nueva reserva
     document.getElementById("reservationForm").addEventListener("submit", (e) => {
         e.preventDefault();
         if(!selectedDate) {
