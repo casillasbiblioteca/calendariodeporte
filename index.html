@@ -2,8 +2,8 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Calendario Compartido - Casillas de Coria | Pádel & Gimnasio</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendario Compartido - Casillas de Coria</title>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -123,13 +123,13 @@
 
 <script>
     // ============================================================
-    // 🔴 CONFIGURACIÓN DE TELEGRAM - ¡PON AQUÍ TUS DATOS!
+    // 🔴 CONFIGURACIÓN DE TELEGRAM - ¡SUSTITUYE EL TOKEN INVENTADO POR EL TUYO!
     // ============================================================
-    const TELEGRAM_BOT_TOKEN = '8787132933:AAF2Y86TKCsBaH1BMm7nCm7D2SjftMaHMh8';   // ← CÓPIALO DE @BotFather
-    const TELEGRAM_CHAT_ID = '174055542';        // ← CÓPIALO DE @GetIDsBot (EJ: 174055542)
+    const TELEGRAM_BOT_TOKEN = '8787132933:AAF2Y86TKCsBaH1BMm7nCm7D2SjftMaHMh8';   // ← Pon aquí tu token real
+    const TELEGRAM_CHAT_ID = '174055542';                                 // ← Tu ID (correcto)
     // ============================================================
 
-    // ========== CONFIGURACIÓN DE FIREBASE (NO CAMBIES NADA) ==========
+    // ========== CONFIGURACIÓN DE FIREBASE (NO CAMBIAR) ==========
     const firebaseConfig = {
         apiKey: "AIzaSyDZY3KrJnPFYFhivDMFj-aFmFAdajQju38",
         authDomain: "reservas-37863.firebaseapp.com",
@@ -137,8 +137,7 @@
         projectId: "reservas-37863",
         storageBucket: "reservas-37863.firebasestorage.app",
         messagingSenderId: "2767535130",
-        appId: "1:2767535130:web:8fad836c4c9dccd98da5a3",
-        measurementId: "G-B7MHXGHG7D"
+        appId: "1:2767535130:web:8fad836c4c9dccd98da5a3"
     };
 
     firebase.initializeApp(firebaseConfig);
@@ -190,10 +189,9 @@
         return allReservations.filter(r => r.dateKey === dateKey).sort((a, b) => a.hour.localeCompare(b.hour));
     }
 
-    // Enviar notificación a Telegram
     function enviarNotificacionTelegram(reserva) {
-        if (TELEGRAM_BOT_TOKEN === 'TU_TOKEN_AQUI' || TELEGRAM_CHAT_ID === 'TU_ID_AQUI') {
-            console.log("🔔 Notificación no enviada: Configura el token y chat ID en el código.");
+        if (TELEGRAM_BOT_TOKEN === '1234567890:ABCDefghIJKlmnopQRstUvwxYZ' || !TELEGRAM_BOT_TOKEN) {
+            console.log("Notificación no enviada: token no configurado.");
             return;
         }
         const mensaje = `🔔 *NUEVA RESERVA EN CASILLAS DE CORIA*\n\n` +
@@ -344,7 +342,7 @@
         URL.revokeObjectURL(url);
     }
 
-    // Hacer globales funciones usadas en onclick
+    // Hacer global la función para onclick
     window.borrarReserva = borrarReserva;
 
     // Escuchar cambios en tiempo real
@@ -390,13 +388,12 @@
             document.getElementById("formFeedback").innerHTML = '<span style="color:#2c5e2e;">✅ Reserva guardada y notificada</span>';
             document.getElementById("reservationForm").reset();
             document.getElementById("hourSelect").value = "";
-            clearSelection(); // Limpia la selección para evitar duplicados accidentales
+            clearSelection();
         }).catch(error => {
             document.getElementById("formFeedback").innerHTML = '<span style="color:#b91c1c;">❌ Error al guardar</span>';
         });
     });
 
-    // Botones de navegación
     document.getElementById("prevMonthBtn").addEventListener("click", () => {
         let newMonth = currentMonth - 1;
         let newYear = currentYear;
