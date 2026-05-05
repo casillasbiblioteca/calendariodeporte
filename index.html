@@ -8,6 +8,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
+        /* (todo el CSS se mantiene igual, no cambio nada) */
         * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
         body { background: #eef2f5; margin: 0; padding: 20px; color: #1e2a3e; }
         .app-container { max-width: 1400px; margin: 0 auto; }
@@ -113,7 +114,7 @@
         <div style="overflow-x:auto;">
             <table class="data-table">
                 <thead><tr><th>Fecha</th><th>Hora</th><th>Instalación</th><th>Nombre</th><th>DNI</th><th>Acción</th></tr></thead>
-                <tbody id="tableBody"><tr><td colspan="6">Cargando reservas...</td></tr></tbody>
+                <tbody id="tableBody"><tr><td colspan="6">Cargando reservas......</td></tr></tbody>
             </table>
         </div>
         <div id="totalsPanel" class="totales"></div>
@@ -123,10 +124,10 @@
 
 <script>
     // ============================================================
-    // 🔴 CONFIGURACIÓN DE TELEGRAM - ¡SUSTITUYE EL TOKEN INVENTADO POR EL TUYO!
+    // 🔴 CONFIGURACIÓN DE TELEGRAM - PON AQUÍ TUS DATOS REALES
     // ============================================================
-    const TELEGRAM_BOT_TOKEN = '8396066610:AAExsMtXh1XEki8pbVGUSVC1oIX-Xg5qggg';   // ← Pon aquí tu token real
-    const TELEGRAM_CHAT_ID = '174055542';                                 // ← Tu ID (correcto)
+    const TELEGRAM_BOT_TOKEN = '8396066610:AAExsMtXh1XEki8pbVGUSVC1oIX-Xg5qggg';      // ← Pon aquí el token de tu bot
+    const TELEGRAM_CHAT_ID = '174055542';      // ← Pon aquí tu chat ID (ej: 174055542)
     // ============================================================
 
     // ========== CONFIGURACIÓN DE FIREBASE (NO CAMBIAR) ==========
@@ -189,8 +190,9 @@
         return allReservations.filter(r => r.dateKey === dateKey).sort((a, b) => a.hour.localeCompare(b.hour));
     }
 
+    // Notificación de NUEVA reserva (ya existente)
     function enviarNotificacionTelegram(reserva) {
-        if (TELEGRAM_BOT_TOKEN === '1234567890:ABCDefghIJKlmnopQRstUvwxYZ' || !TELEGRAM_BOT_TOKEN) {
+        if (!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN === 'AQUÍ_TU_TOKEN') {
             console.log("Notificación no enviada: token no configurado.");
             return;
         }
@@ -212,15 +214,49 @@
         }).catch(error => console.error('Error al enviar a Telegram:', error));
     }
 
+    // NUEVA: Notificación de RESERVA BORRADA
+    function enviarNotificacionBorrado(reserva) {
+        if (!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN === 'AQUÍ_TU_TOKEN') return;
+        const mensaje = `🗑️ *RESERVA CANCELADA*\n\n` +
+                        `📅 *Día:* ${formatDateForDisplay(reserva.dateKey)}\n` +
+                        `⏰ *Hora:* ${reserva.hour}\n` +
+                        `🏋️ *Instalación:* ${reserva.facility}\n` +
+                        `👤 *Reservado por:* ${escapeHtml(reserva.fullName)}\n\n` +
+                        `❌ La reserva ha sido eliminada.`;
+        const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+        fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: TELEGRAM_CHAT_ID,
+                text: mensaje,
+                parse_mode: 'Markdown'
+            })
+        }).catch(error => console.error('Error al enviar notificación de borrado:', error));
+    }
+
+    // Función borrarReserva MODIFICADA (ahora envía notificación de borrado)
     function borrarReserva(id) {
-        if (confirm("¿Estás seguro de que quieres borrar esta reserva?")) {
-            database.ref('reservas/' + id).remove()
-                .then(() => {
-                    document.getElementById("formFeedback").innerHTML = '<span style="color:#2c5e2e;">✅ Reserva borrada</span>';
-                    setTimeout(() => document.getElementById("formFeedback").innerHTML = '', 2000);
-                })
-                .catch(error => document.getElementById("formFeedback").innerHTML = '<span style="color:#b91c1c;">❌ Error al borrar</span>');
+        if (!confirm("¿Estás seguro de que quieres borrar esta reserva?")) return;
+
+        // Buscar la reserva en el array local para obtener sus datos
+        const reserva = allReservations.find(r => r.id === id);
+        if (!reserva) {
+            console.error("No se encontró la reserva para notificación");
+            database.ref('reservas/' + id).remove();
+            return;
         }
+
+        database.ref('reservas/' + id).remove()
+            .then(() => {
+                enviarNotificacionBorrado(reserva);  // ← Envía notificación de borrado
+                document.getElementById("formFeedback").innerHTML = '<span style="color:#2c5e2e;">✅ Reserva borrada y notificada</span>';
+                setTimeout(() => document.getElementById("formFeedback").innerHTML = '', 2000);
+            })
+            .catch(error => {
+                document.getElementById("formFeedback").innerHTML = '<span style="color:#b91c1c;">❌ Error al borrar</span>';
+                console.error(error);
+            });
     }
 
     function displayOccupancyForDate(dateKey) {
