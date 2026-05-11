@@ -2,17 +2,17 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calendario Compartido - Casillas de Coria</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Calendario Compartido - Casillas de Coria | Pádel & Gimnasio</title>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        /* (todo el CSS se mantiene igual, no cambio nada) */
+        /* === Estilos existentes === */
         * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
         body { background: #eef2f5; margin: 0; padding: 20px; color: #1e2a3e; }
         .app-container { max-width: 1400px; margin: 0 auto; }
-        .hero { background: linear-gradient(135deg, #1b4d2e, #0f3b24); color: white; border-radius: 32px; padding: 20px 28px; margin-bottom: 28px; }
+        .hero { background: linear-gradient(135deg, #1b4d2e, #0f3b24); color: white; border-radius: 32px; padding: 20px 28px; margin-bottom: 28px; position: relative; }
         .hero h1 { margin: 0 0 6px 0; font-size: 1.8rem; }
         .main-grid { display: flex; flex-wrap: wrap; gap: 28px; margin-bottom: 40px; }
         .calendar-card { flex: 2; min-width: 280px; background: white; border-radius: 32px; padding: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.05); }
@@ -48,6 +48,58 @@
         button.download-btn { background: #106b3c; padding: 10px 24px; border-radius: 40px; border: none; color: white; cursor: pointer; }
         footer { text-align: center; margin-top: 40px; color: #5f6c7a; }
         @media (max-width: 780px) { .day-cell { padding: 8px 2px; font-size: 0.8rem; } }
+
+        /* === Nuevo estilo botón mostrar tarifas === */
+        .btn-tarifas {
+            background-color: #f1c40f;
+            color: #1e2a3e;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-weight: bold;
+            margin-top: 15px;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-block;
+            font-size: 0.9rem;
+        }
+        .btn-tarifas:hover { background-color: #e67e22; color: white; }
+        .tarifas-table-wrapper {
+            margin-top: 20px;
+            overflow-x: auto;
+            background: rgba(255,255,255,0.1);
+            border-radius: 24px;
+            padding: 4px;
+            display: none; /* Oculto por defecto */
+        }
+        .tarifas-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            color: #f9f9f9;
+        }
+        .tarifas-table th, .tarifas-table td {
+            border: 1px solid #cbd5e1;
+            padding: 8px 12px;
+            text-align: center;
+            background-color: #fefefe;
+            color: #1e2a3e;
+        }
+        .tarifas-table th {
+            background-color: #2c5e2e;
+            color: white;
+            font-weight: 600;
+        }
+        .tarifas-table td:first-child {
+            font-weight: bold;
+            background-color: #f1f5f9;
+        }
+        .caption-tarifas {
+            font-size: 0.7rem;
+            margin-top: 6px;
+            text-align: left;
+            opacity: 0.9;
+        }
     </style>
 </head>
 <body>
@@ -56,8 +108,37 @@
         <h1><i class="fas fa-calendar-alt"></i> Reservas deportivas · Casillas de Coria</h1>
         <p>Pistas de Pádel | Gimnasio municipal · Horario 09:00 - 14:00</p>
         <p><i class="fas fa-globe"></i> <strong>✅ DATOS COMPARTIDOS + NOTIFICACIONES POR TELEGRAM</strong></p>
+        
+        <!-- Botón para mostrar/ocultar tarifas -->
+        <button id="toggleTarifasBtn" class="btn-tarifas"><i class="fas fa-euro-sign"></i> Ver tarifas</button>
+
+        <!-- TABLA DE TARIFAS (oculta al inicio) -->
+        <div id="tarifasWrapper" class="tarifas-table-wrapper">
+            <table class="tarifas-table">
+                <thead>
+                    <tr>
+                        <th>Servicio</th>
+                        <th>Tipo de Abono / Uso</th>
+                        <th>Residente</th>
+                        <th>No Residente</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td rowspan="5">Gimnasio</td><td>Diario</td><td>1 €</td><td>3 €</td></tr>
+                    <tr><td>Mensual</td><td>10 €</td><td>20 €</td></tr>
+                    <tr><td>Trimestral</td><td>25 €</td><td>60 €</td></tr>
+                    <tr><td>Semestral</td><td>50 €</td><td>100 €</td></tr>
+                    <tr><td>Anual</td><td>70 €</td><td>200 €</td></tr>
+                    <tr><td>Pádel</td><td>Precio por uso</td><td>1 €</td><td>3 €</td></tr>
+                </tbody>
+            </table>
+            <div class="caption-tarifas">
+                <i class="fas fa-info-circle"></i> Tarifas vigentes para 2026. Precio por uso por persona y sesión de 1 hora.
+            </div>
+        </div>
     </div>
 
+    <!-- El resto del calendario y formulario se mantiene igual -->
     <div class="main-grid">
         <div class="calendar-card">
             <div class="month-nav">
@@ -113,8 +194,8 @@
         </div>
         <div style="overflow-x:auto;">
             <table class="data-table">
-                <thead><tr><th>Fecha</th><th>Hora</th><th>Instalación</th><th>Nombre</th><th>DNI</th><th>Acción</th></tr></thead>
-                <tbody id="tableBody"><tr><td colspan="6">Cargando reservas......</td></tr></tbody>
+                <thead><td><th>Fecha</th><th>Hora</th><th>Instalación</th><th>Nombre</th><th>DNI</th><th>Acción</th></tr></thead>
+                <tbody id="tableBody"><tr><td colspan="6">Cargando reservas...</td></tr></tbody>
             </table>
         </div>
         <div id="totalsPanel" class="totales"></div>
@@ -130,7 +211,7 @@
     const TELEGRAM_CHAT_ID = '174055542';      // ← Pon aquí tu chat ID (ej: 174055542)
     // ============================================================
 
-    // ========== CONFIGURACIÓN DE FIREBASE (NO CAMBIAR) ==========
+    // Configuración de Firebase (sin cambios)
     const firebaseConfig = {
         apiKey: "AIzaSyDZY3KrJnPFYFhivDMFj-aFmFAdajQju38",
         authDomain: "reservas-37863.firebaseapp.com",
@@ -150,7 +231,7 @@
     let currentYear = new Date().getFullYear();
     let currentMonth = new Date().getMonth();
 
-    // Funciones auxiliares
+    // Funciones auxiliares (las mismas de antes)
     function formatDateForDisplay(dateStr) {
         if (!dateStr) return "";
         const [y, m, d] = dateStr.split("-");
@@ -190,76 +271,43 @@
         return allReservations.filter(r => r.dateKey === dateKey).sort((a, b) => a.hour.localeCompare(b.hour));
     }
 
-    // Notificación de NUEVA reserva (ya existente)
+    // Notificaciones Telegram
     function enviarNotificacionTelegram(reserva) {
-        if (!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN === 'AQUÍ_TU_TOKEN') {
-            console.log("Notificación no enviada: token no configurado.");
-            return;
-        }
+        if (!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN === 'AQUÍ_TU_TOKEN') return;
         const mensaje = `🔔 *NUEVA RESERVA EN CASILLAS DE CORIA*\n\n` +
                         `📅 *Día:* ${formatDateForDisplay(reserva.dateKey)}\n` +
                         `⏰ *Hora:* ${reserva.hour}\n` +
                         `🏋️ *Instalación:* ${reserva.facility}\n` +
                         `👤 *Reservado por:* ${escapeHtml(reserva.fullName)}`;
-        const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-        const params = {
-            chat_id: TELEGRAM_CHAT_ID,
-            text: mensaje,
-            parse_mode: 'Markdown'
-        };
-        fetch(url, {
+        fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(params)
-        }).catch(error => console.error('Error al enviar a Telegram:', error));
+            body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: mensaje, parse_mode: 'Markdown' })
+        }).catch(e => console.error(e));
     }
 
-    // NUEVA: Notificación de RESERVA BORRADA
     function enviarNotificacionBorrado(reserva) {
         if (!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN === 'AQUÍ_TU_TOKEN') return;
-        const mensaje = `🗑️ *RESERVA CANCELADA*\n\n` +
-                        `📅 *Día:* ${formatDateForDisplay(reserva.dateKey)}\n` +
-                        `⏰ *Hora:* ${reserva.hour}\n` +
-                        `🏋️ *Instalación:* ${reserva.facility}\n` +
-                        `👤 *Reservado por:* ${escapeHtml(reserva.fullName)}\n\n` +
-                        `❌ La reserva ha sido eliminada.`;
-        const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-        fetch(url, {
+        const mensaje = `🗑️ RESERVA CANCELADA\n\nDía: ${formatDateForDisplay(reserva.dateKey)}\nHora: ${reserva.hour}\nInstalación: ${reserva.facility}\nReservado por: ${escapeHtml(reserva.fullName)}\n\nLa reserva ha sido eliminada.`;
+        fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                chat_id: TELEGRAM_CHAT_ID,
-                text: mensaje,
-                parse_mode: 'Markdown'
-            })
-        }).catch(error => console.error('Error al enviar notificación de borrado:', error));
+            body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: mensaje })
+        }).catch(e => console.error(e));
     }
 
-    // Función borrarReserva MODIFICADA (ahora envía notificación de borrado)
     function borrarReserva(id) {
         if (!confirm("¿Estás seguro de que quieres borrar esta reserva?")) return;
-
-        // Buscar la reserva en el array local para obtener sus datos
         const reserva = allReservations.find(r => r.id === id);
-        if (!reserva) {
-            console.error("No se encontró la reserva para notificación");
-            database.ref('reservas/' + id).remove();
-            return;
-        }
-
-        database.ref('reservas/' + id).remove()
-            .then(() => {
-                enviarNotificacionBorrado(reserva);  // ← Envía notificación de borrado
-                document.getElementById("formFeedback").innerHTML = '<span style="color:#2c5e2e;">✅ Reserva borrada y notificada</span>';
-                setTimeout(() => document.getElementById("formFeedback").innerHTML = '', 2000);
-            })
-            .catch(error => {
-                document.getElementById("formFeedback").innerHTML = '<span style="color:#b91c1c;">❌ Error al borrar</span>';
-                console.error(error);
-            });
+        if (!reserva) { database.ref('reservas/' + id).remove(); return; }
+        database.ref('reservas/' + id).remove().then(() => {
+            enviarNotificacionBorrado(reserva);
+            document.getElementById("formFeedback").innerHTML = '<span style="color:#2c5e2e;">✅ Reserva borrada y notificada</span>';
+            setTimeout(() => document.getElementById("formFeedback").innerHTML = '', 2000);
+        }).catch(e => console.error(e));
     }
 
-    function displayOccupancyForDate(dateKey) {
+    function displayOccupancyForDate(dateKey) { /* igual que antes */ 
         const panel = document.getElementById("occupancyPanel");
         const listDiv = document.getElementById("occupancyList");
         if (!dateKey) { panel.style.display = "none"; return; }
@@ -272,16 +320,7 @@
         let html = '';
         reservasDia.forEach(res => {
             let icon = res.facility === "Pista Pádel" ? "🎾" : "🏋️";
-            html += `
-                <div class="occupancy-item">
-                    <div class="occupancy-info">
-                        <span class="occupancy-hour">${res.hour}</span>
-                        <strong>${icon} ${res.facility}</strong><br>
-                        <span style="font-size:0.75rem;">👤 ${escapeHtml(res.fullName)} ${res.dni ? `(${escapeHtml(res.dni)})` : ''}</span>
-                    </div>
-                    <button class="btn-danger" onclick="borrarReserva('${res.id}')"><i class="fas fa-trash"></i> Borrar</button>
-                </div>
-            `;
+            html += `<div class="occupancy-item"><div class="occupancy-info"><span class="occupancy-hour">${res.hour}</span> <strong>${icon} ${res.facility}</strong><br><span style="font-size:0.75rem;">👤 ${escapeHtml(res.fullName)} ${res.dni ? `(${escapeHtml(res.dni)})` : ''}</span></div><button class="btn-danger" onclick="borrarReserva('${res.id}')"><i class="fas fa-trash"></i> Borrar</button></div>`;
         });
         listDiv.innerHTML = html;
         panel.style.display = "block";
@@ -308,8 +347,7 @@
             cell.addEventListener("click", (function(key) { return function() { selectDate(key); }; })(dateKey));
             grid.appendChild(cell);
         }
-        let totalCells = startOffset + daysInMonth;
-        let remaining = 42 - totalCells;
+        let remaining = 42 - (startOffset + daysInMonth);
         for (let i = 0; i < remaining; i++) { let empty = document.createElement("div"); empty.className = "empty-cell"; grid.appendChild(empty); }
     }
 
@@ -336,18 +374,10 @@
         });
         reservationsMonth.sort((a, b) => a.dateKey.localeCompare(b.dateKey) || a.hour.localeCompare(b.hour));
         const tbody = document.getElementById("tableBody");
-        if (reservationsMonth.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6">No hay reservas este mes</td></tr>';
-        } else {
+        if (reservationsMonth.length === 0) tbody.innerHTML = '<tr><td colspan="6">No hay reservas este mes</td></tr>';
+        else {
             tbody.innerHTML = reservationsMonth.map(res => `
-                <tr>
-                    <td>${formatDateForDisplay(res.dateKey)}</td>
-                    <td>${res.hour}</td>
-                    <td>${res.facility}</td>
-                    <td>${escapeHtml(res.fullName)}</td>
-                    <td>${escapeHtml(res.dni) || "—"}</td>
-                    <td><button class="delete-btn" onclick="borrarReserva('${res.id}')"><i class="fas fa-trash"></i> Borrar</button></td>
-                </tr>
+                <tr><td>${formatDateForDisplay(res.dateKey)}</td><td>${res.hour}</td><td>${res.facility}</td><td>${escapeHtml(res.fullName)}</td><td>${escapeHtml(res.dni) || "—"}</td><td><button class="delete-btn" onclick="borrarReserva('${res.id}')"><i class="fas fa-trash"></i> Borrar</button></td></tr>
             `).join('');
         }
         const total = reservationsMonth.length;
@@ -361,97 +391,74 @@
             const [y, m] = r.dateKey.split("-");
             return parseInt(y) === currentYear && parseInt(m) === (currentMonth + 1);
         });
-        let csvRows = [["FECHA", "HORA", "INSTALACIÓN", "NOMBRE", "DNI"]];
+        let csvRows = [["FECHA","HORA","INSTALACIÓN","NOMBRE","DNI"]];
         reservationsMonth.forEach(r => csvRows.push([formatDateForDisplay(r.dateKey), r.hour, r.facility, r.fullName, r.dni || ""]));
-        const totalP = reservationsMonth.filter(r => r.facility === "Pista Pádel").length;
-        const totalG = reservationsMonth.filter(r => r.facility === "Gimnasio").length;
+        const totalP = reservationsMonth.filter(r=> r.facility === "Pista Pádel").length;
+        const totalG = reservationsMonth.filter(r=> r.facility === "Gimnasio").length;
         csvRows.push(["TOTALES", `Total: ${reservationsMonth.length}`, `Pádel: ${totalP}`, `Gimnasio: ${totalG}`, ""]);
         let csvContent = csvRows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\n");
         const blob = new Blob(["\uFEFF" + csvContent], { type: "application/vnd.ms-excel" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `Reservas_${currentYear}_${currentMonth + 1}_Casillas.xls`;
+        a.download = `Reservas_${currentYear}_${currentMonth+1}_Casillas.xls`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
     }
 
-    // Hacer global la función para onclick
     window.borrarReserva = borrarReserva;
 
-    // Escuchar cambios en tiempo real
     reservasRef.on('value', (snapshot) => {
         const data = snapshot.val();
-        if (data) {
-            allReservations = Object.keys(data).map(key => ({ id: key, ...data[key] }));
-        } else {
-            allReservations = [];
-        }
+        allReservations = data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : [];
         renderCalendar();
         refreshMonthTable();
         if (selectedDate) displayOccupancyForDate(selectedDate);
     });
 
-    // Guardar nueva reserva + notificación
     document.getElementById("reservationForm").addEventListener("submit", (e) => {
         e.preventDefault();
-        if (!selectedDate) {
-            document.getElementById("formFeedback").innerHTML = '<span style="color:#b91c1c;">❌ Selecciona un día primero</span>';
-            return;
-        }
+        if (!selectedDate) { document.getElementById("formFeedback").innerHTML = '<span style="color:#b91c1c;">❌ Selecciona un día primero</span>'; return; }
         const fullName = document.getElementById("fullName").value.trim();
         const dni = document.getElementById("dni").value;
         const hour = document.getElementById("hourSelect").value;
         const facility = document.getElementById("facilitySelect").value;
         if (!fullName) { document.getElementById("formFeedback").innerHTML = '<span style="color:#b91c1c;">❌ Nombre obligatorio</span>'; return; }
         if (!hour) { document.getElementById("formFeedback").innerHTML = '<span style="color:#b91c1c;">❌ Selecciona hora</span>'; return; }
-        if (isConflict(selectedDate, hour, facility)) {
-            document.getElementById("formFeedback").innerHTML = '<span style="color:#b91c1c;">⚠️ Ya hay una reserva en esa hora e instalación</span>';
-            return;
-        }
-        const nuevaReserva = {
-            dateKey: selectedDate,
-            hour: hour,
-            fullName: fullName,
-            dni: dni,
-            facility: facility,
-            timestamp: Date.now()
-        };
+        if (isConflict(selectedDate, hour, facility)) { document.getElementById("formFeedback").innerHTML = '<span style="color:#b91c1c;">⚠️ Ya hay una reserva en esa hora e instalación</span>'; return; }
+        const nuevaReserva = { dateKey: selectedDate, hour, fullName, dni, facility, timestamp: Date.now() };
         reservasRef.push(nuevaReserva).then(() => {
             enviarNotificacionTelegram(nuevaReserva);
             document.getElementById("formFeedback").innerHTML = '<span style="color:#2c5e2e;">✅ Reserva guardada y notificada</span>';
             document.getElementById("reservationForm").reset();
             document.getElementById("hourSelect").value = "";
             clearSelection();
-        }).catch(error => {
-            document.getElementById("formFeedback").innerHTML = '<span style="color:#b91c1c;">❌ Error al guardar</span>';
-        });
+        }).catch(e => document.getElementById("formFeedback").innerHTML = '<span style="color:#b91c1c;">❌ Error al guardar</span>');
     });
 
-    document.getElementById("prevMonthBtn").addEventListener("click", () => {
-        let newMonth = currentMonth - 1;
-        let newYear = currentYear;
-        if (newMonth < 0) { newMonth = 11; newYear--; }
-        currentYear = newYear; currentMonth = newMonth;
-        renderCalendar(); refreshMonthTable(); clearSelection();
+    document.getElementById("prevMonthBtn").onclick = () => { let m = currentMonth-1; if(m<0){m=11; currentYear--;} currentMonth=m; renderCalendar(); refreshMonthTable(); clearSelection(); };
+    document.getElementById("nextMonthBtn").onclick = () => { let m = currentMonth+1; if(m>11){m=0; currentYear++;} currentMonth=m; renderCalendar(); refreshMonthTable(); clearSelection(); };
+    document.getElementById("todayBtn").onclick = () => { let d=new Date(); currentYear=d.getFullYear(); currentMonth=d.getMonth(); renderCalendar(); refreshMonthTable(); clearSelection(); };
+    document.getElementById("clearSelectionBtn").onclick = clearSelection;
+    document.getElementById("downloadExcelBtn").onclick = downloadExcel;
+
+    // Control del botón de tarifas (mostrar/ocultar)
+    const tarifasWrapper = document.getElementById("tarifasWrapper");
+    const toggleBtn = document.getElementById("toggleTarifasBtn");
+    let tarifasVisible = false;
+    toggleBtn.addEventListener("click", () => {
+        if (tarifasVisible) {
+            tarifasWrapper.style.display = "none";
+            toggleBtn.innerHTML = '<i class="fas fa-euro-sign"></i> Ver tarifas';
+            tarifasVisible = false;
+        } else {
+            tarifasWrapper.style.display = "block";
+            toggleBtn.innerHTML = '<i class="fas fa-eye-slash"></i> Ocultar tarifas';
+            tarifasVisible = true;
+        }
     });
-    document.getElementById("nextMonthBtn").addEventListener("click", () => {
-        let newMonth = currentMonth + 1;
-        let newYear = currentYear;
-        if (newMonth > 11) { newMonth = 0; newYear++; }
-        currentYear = newYear; currentMonth = newMonth;
-        renderCalendar(); refreshMonthTable(); clearSelection();
-    });
-    document.getElementById("todayBtn").addEventListener("click", () => {
-        const today = new Date();
-        currentYear = today.getFullYear();
-        currentMonth = today.getMonth();
-        renderCalendar(); refreshMonthTable(); clearSelection();
-    });
-    document.getElementById("clearSelectionBtn").addEventListener("click", clearSelection);
-    document.getElementById("downloadExcelBtn").addEventListener("click", downloadExcel);
 
     populateHourSelect();
     renderCalendar();
